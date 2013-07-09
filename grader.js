@@ -27,6 +27,9 @@ var cheerio = require('cheerio');
 var HTMLFILE_DEFAULT = "index.html";
 var CHECKSFILE_DEFAULT = "checks.json";
 
+var rests=require('restler');
+
+
 var assertFileExists = function(infile) {
     var instr = infile.toString();
     if(!fs.existsSync(instr)) {
@@ -61,12 +64,31 @@ var clone = function(fn) {
     return fn.bind({});
 };
 
+var checkUrlFile = function(url, checksfile)  
+{
+    rests.get(url).on('complete', function(data) {
+	console.log(data.message);
+	return checkHtmlFile(data.message,checksfile);
+    });
+
+
+};
 if(require.main == module) {
     program
         .option('-c, --checks <check_file>', 'Path to checks.json', clone(assertFileExists), CHECKSFILE_DEFAULT)
         .option('-f, --file <html_file>', 'Path to index.html', clone(assertFileExists), HTMLFILE_DEFAULT)
+        .option('-u, --url <url>', 'URL to index.html')
         .parse(process.argv);
-    var checkJson = checkHtmlFile(program.file, program.checks);
+    var checkson = "";
+    if ( program.url )
+      {
+	  checkJson = checkUrlFile(program.url, program.checks);
+      }
+    else
+    {
+	 checkJson = checkHtmlFile(program.file, program.checks);
+    }
+    
     var outJson = JSON.stringify(checkJson, null, 4);
     console.log(outJson);
 } else {
