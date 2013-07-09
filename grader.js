@@ -39,6 +39,19 @@ var assertFileExists = function(infile) {
     return instr;
 };
 
+var buildfn = function(h) {
+    var response2console = function(result, response) {
+        if (result instanceof Error) {
+            console.error('Error: ' + util.format(response.message));
+        } else {
+
+            fs.writeFileSync(HTMLFILE_DEFAULT , result);
+
+        }
+    };
+    return response2console;
+};
+
 var cheerioHtmlFile = function(htmlfile) {
     return cheerio.load(fs.readFileSync(htmlfile));
 };
@@ -66,12 +79,9 @@ var clone = function(fn) {
 
 var checkUrlFile = function(url, checksfile)  
 {
-    rests.get(url).on('complete', function(data) {
-	console.log(data.message);
-	return checkHtmlFile(data.message,checksfile);
-    });
-
-
+    var responseToFile = buildfn();
+    rests.get(url).on('complete', responseToFile);
+    return checkHtmlFile(HTMLFILE_DEFAULT, checksfile);
 };
 if(require.main == module) {
     program
@@ -81,9 +91,9 @@ if(require.main == module) {
         .parse(process.argv);
     var checkson = "";
     if ( program.url )
-      {
-	  checkJson = checkUrlFile(program.url, program.checks);
-      }
+    {
+	checkJson = checkUrlFile(program.url, program.checks);
+    }
     else
     {
 	 checkJson = checkHtmlFile(program.file, program.checks);
